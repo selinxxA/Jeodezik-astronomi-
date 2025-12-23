@@ -2,9 +2,9 @@ import streamlit as st
 from astropy.coordinates import EarthLocation, SkyCoord, AltAz
 from astropy.time import Time
 from astropy import units as u
-import pandas as pd # Tablo gösterimi için (opsiyonel ama şık durur)
+import pandas as pd
 
-# --- SAYFA AYARLARI ---
+
 st.set_page_config(page_title="Geomatik Uzay Navigasyonu", page_icon="⭐")
 
 def add_bg_from_url():
@@ -34,25 +34,24 @@ add_bg_from_url()
 
 
 
-# --- BAŞLIK VE AÇIKLAMA ---
+
 st.title("🌌 Yıldız Navigasyon Sistemi")
 st.write("Bulunduğunuz konuma göre gökyüzündeki parlak yıldızların koordinatlarını hesaplayan web arayüzü.")
 
-# --- 1. KULLANICI GİRİŞİ (SOL MENÜ - SIDEBAR) ---
 st.sidebar.header("📍 Konum Bilgileri")
 st.sidebar.info("Lütfen koordinatları ondalık derece cinsinden giriniz.")
 
-# input yerine st.number_input kullanıyoruz
+
 lat = st.sidebar.number_input("Enlem (Latitude)", value=41.0082, step=0.0001, format="%.4f")
 lon = st.sidebar.number_input("Boylam (Longitude)", value=28.9784, step=0.0001, format="%.4f")
 h = st.sidebar.number_input("Yükseklik (Metre)", value=0, step=1)
 
-# Hesapla Butonu
+
 hesapla_butonu = st.sidebar.button("Yıldızları Hesapla 🚀")
 
-# --- 2. HESAPLAMA MOTORU ---
+
 if hesapla_butonu:
-    # Konum ve Zamanı Ayarla
+    
     try:
         location = EarthLocation(lat=lat*u.deg, lon=lon*u.deg, height=h*u.m)
         time = Time.now()
@@ -60,7 +59,7 @@ if hesapla_butonu:
         st.success(f"Hesaplama Zamanı (UTC): {time.iso}")
         st.write("---")
 
-        # Yıldız Kataloğu
+       
         yildizlar_katalogu = {
             'Sirius': SkyCoord(ra='06h45m08s', dec='-16d42m58s', frame='icrs'),
             'Polaris (Kutup Yildizi)': SkyCoord(ra='02h31m49s', dec='+89d15m50s', frame='icrs'),
@@ -72,7 +71,7 @@ if hesapla_butonu:
 
         altaz_frame = AltAz(obstime=time, location=location)
         
-        # Sonuçları toplamak için boş bir liste
+       
         sonuc_listesi = []
 
         for isim, koordinat in yildizlar_katalogu.items():
@@ -80,7 +79,7 @@ if hesapla_butonu:
             alt = yerel_konum.alt.degree
             az = yerel_konum.az.degree
             
-            # Yön Tarifi
+           
             yon_tarifi = ""
             if 337.5 <= az or az < 22.5: yon_tarifi = "Kuzey"
             elif 22.5 <= az < 67.5: yon_tarifi = "Kuzey Doğu"
@@ -91,10 +90,9 @@ if hesapla_butonu:
             elif 247.5 <= az < 292.5: yon_tarifi = "Batı"
             elif 292.5 <= az < 337.5: yon_tarifi = "Kuzey Batı"
 
-            # Sadece Ufuk Üstü
+           
             durum = "Görünür" if alt > 0 else "Ufuk Altında"
             
-            # Listeye ekle (Görünse de görünmese de ekleyelim, tabloda filtreleriz)
             if alt > 0:
                 sonuc_listesi.append({
                     "Yıldız Adı": isim,
@@ -104,14 +102,12 @@ if hesapla_butonu:
                     "Durum": "✅ GÖRÜNÜR"
                 })
 
-        # --- 3. SONUÇLARI GÖSTERME ---
         if len(sonuc_listesi) > 0:
             st.subheader("🔭 Görülebilir Yıldızlar Listesi")
-            # Listeyi şık bir tabloya (DataFrame) çevirip gösteriyoruz
             df = pd.DataFrame(sonuc_listesi)
             st.table(df)
             
-            # Harita Bonusu: Geomatikçi olduğun için basit bir harita da koyalım
+            
             st.map(pd.DataFrame({'lat': [lat], 'lon': [lon]}))
             st.caption("Konumunuz harita üzerinde işaretlendi.")
             
@@ -122,4 +118,5 @@ if hesapla_butonu:
         st.error(f"Bir hata oluştu: {e}")
 
 else:
+
     st.info("Hesaplama yapmak için sol taraftaki 'Yıldızları Hesapla' butonuna basınız.")
